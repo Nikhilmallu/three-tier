@@ -1,0 +1,26 @@
+A 3 tier environment is a common setup. Use a tool of your choosing/familiarity create these resources. Please remember we will not be judged on the outcome but more focusing on the approach, style and reproducibility.
+
+
+Steps:
+
+1) Cretae the docker file execute the below file to create the image.
+
+GCP Project: test-app
+
+  
+  docker build -t gcr.io/test-app/three-tier-app:v1.0 .
+  docker push gcr.io/test-app/three-tier-app:v1.0
+
+creating the yamls to deploy the three-tier-app application via k8s.
+
+1) Create the GKE cluster in GCP or you can deploy locally mini kube.(Using mini kube you can't deploy external LB).
+
+    I have created standard zonal GKE cluster to deploy the below application.
+
+1) created the deployment.yaml and service.yaml (with external loadbalancer).
+   deployment.yaml
+   service.yaml
+
+
+ 
+   
