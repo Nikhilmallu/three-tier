@@ -1,0 +1,70 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: three-tier-db
+    three-tier.component: database
+    deployedby: three-tier-yaml
+  name: three-tier-db
+  namespace: three-tier
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: three-tier-db
+  template:
+    metadata:
+      labels:
+        three-tier.component: database
+        app: three-tier-db
+      name: three-tier-db
+      namespace: three-tier
+    spec:
+      securityContext:
+        runAsUser: 70
+        runAsGroup: 70
+        fsGroup: 11433
+      serviceAccount: three-tier-sa
+      restartPolicy: Always
+      initContainers:
+      - name: three-tier-db-init
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: three-tier-db
+        envFrom:
+        - configMapRef:
+            name: three-tier-csp-db-config
+        image: gcr.io/test-app/database:2022.4
+        command: [ "sh", "-c", "[ -f $PGDATA/server.key ] && chmod 600 $PGDATA/server.key || echo 'OK' " ]
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: postgres-db
+      containers:
+      - name: three-tier-db
+        securityContext:
+          privileged: false
+        image: gcr.io/test-app/database:2022.4
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - configMapRef:
+            name: three-tier-csp-db-config
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: three-tier-db
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: postgres-db
+        ports:
+        - containerPort: 5432
+          protocol: TCP
+      volumes:
+      - name: postgres-db
+        persistentVolumeClaim:
+          claimName: three-tier-db-pvc
